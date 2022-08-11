@@ -46,10 +46,9 @@ def main():
 
     # Setup signal handler to stop questionnaire
     def handler(signum, frame):
-        res = input("Ctrl-c was pressed. Do you really want to exit? y/n ")
-        if res == 'y':
-            qp.print_result(exit=True)
-            exit(1)
+        print(f"{Fore.RED}Ctrl-c a été appuyé, fin du questionnaire.{Style.RESET_ALL}")
+        qp.print_result(exit=True)
+        exit(1)
 
     signal.signal(signal.SIGINT, handler)
 
@@ -60,17 +59,20 @@ class QuestionParser:
     def __init__(self, parser):
         self.parser = parser
         self._question_number = 0
+        self._nb_good_response = 0
+        self._nb_wrong_response = 0
 
     def print_result(self, exit=False):
-        print("résultat")
+        print()
+        if not self.parser.debug:
+            print(f"{Fore.YELLOW}Résultat :{Style.RESET_ALL}")
+            print(f"{Fore.GREEN}{self._nb_good_response}{Style.RESET_ALL} bonne(s) réponse(s).")
+            print(f"{Fore.RED}{self._nb_wrong_response}{Style.RESET_ALL} mauvaise(s) réponse(s).")
         if exit:
             print("Commande pour recontinuer :")
             print(f"python3 questionnaire.py -q {self._question_number}")
 
     def start(self):
-        # x = input("Input Your Name")
-        # print(x)
-
         with open(self.parser.database) as csv_file:
             csv_reader = csv.reader(csv_file, delimiter=',')
             line_count = 0
@@ -100,15 +102,25 @@ class QuestionParser:
                     if self.parser.debug:
                         if self.parser.debug_delay:
                             time.sleep(self.parser.debug_delay)
-                        print("réponse")
-                        print(row[1])
-                        print()
-                        print(f"{Fore.BLUE}{row[6]}{Style.RESET_ALL}")
+                        print(f"Réponse : {Fore.RED}{row[1]}{Style.RESET_ALL}")
                     else:
-                        print()
+                        self.get_answer(row[1])
+                    print()
+                    print(f"Explication : {Fore.BLUE}{row[6]}{Style.RESET_ALL}")
                     print()
             print(f'{Fore.RED}Questionnaire complété!{Style.RESET_ALL}')
             self.print_result()
+
+    def get_answer(self, expected_value):
+        x = input("Votre réponse : ")
+        x = x.upper()
+        if expected_value == x:
+            print(f"{Fore.GREEN}Bonne réponse! ☺{Style.RESET_ALL}")
+            self._nb_good_response += 1
+        else:
+            print(
+                f"{x} est la {Fore.RED}mauvaise réponse{Style.RESET_ALL}, réponse {Fore.GREEN}{expected_value}{Style.RESET_ALL}")
+            self._nb_wrong_response += 1
 
     def print_response(self, row, no):
         # mot_souligne
