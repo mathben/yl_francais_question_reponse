@@ -37,3 +37,8 @@ Pour reprendre à une question spécifique, tel que la question 2 (ça débute �
 Pour plus d'aide :
 
 `python3 questionnaire.py --help`
+
+## Mettre fin au questionnaire
+
+Faites `Ctrl-c` pour mettre fin au questionnaire, votre résultat vous sera transmis ainsi que la prochaine question pour
+recontinuer.
