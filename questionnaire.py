@@ -18,7 +18,7 @@ def main():
     parser.add_argument("-d", "--database", type=str, help="Your database filename path",
                         default="./database.csv")
     parser.add_argument("--response_char", type=str,
-                        help="Le caractère qui représente la réponse. Suggestion : 0, 1, a. Elle est insensible (minuscule ou majuscule).",
+                        help="BRISÉ, ne pas changer le paramètre. Le caractère qui représente la réponse. Suggestion : 0, 1, a. Elle est insensible (minuscule ou majuscule).",
                         default="a")
     parser.add_argument("-q", "--question", type=int, help="Question index to begin, start at 1 by default", default=1)
     parser.add_argument("--mot_souligne", type=str,
@@ -112,8 +112,13 @@ class QuestionParser:
             self.print_result()
 
     def get_answer(self, expected_value):
-        x = input("Votre réponse : ")
-        x = x.upper()
+        x = ""
+        while not x:
+            x = input("Votre réponse : ")
+            x = x.upper().strip()
+            if x not in ("A", "B", "C", "D"):
+                x = ""
+
         if expected_value == x:
             print(f"{Fore.GREEN}Bonne réponse! ☺{Style.RESET_ALL}")
             self._nb_good_response += 1
