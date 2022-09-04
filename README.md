@@ -49,3 +49,19 @@ recontinuer.
 Générer la base de données à partir du PDF :
 
 `python3 questionnaire.py --test`
+
+## COPYRIGHT logiciel
+
+AGPLv3
+MathBenTech
+
+
+## COPYRIGHT base de données
+
+La source est de l'Université du Québec à Trois-Rivières.
+
+TECFÉE - André Bougaïeff - UQTR - Université du Québec
+https://oraprdnt.uqtr.uquebec.ca › pls › public › gscw031
+19 oct. 2021 — Entraînement aux 60 questions du code linguistique de TECFÉE. POUR SAVOIR CE QUI VOUS ATTEND AU TEST DU CODE LINGUISTIQUE DE TECFÉE,
+
+https://oraprdnt.uqtr.uquebec.ca/pls/public/gscw031?owa_no_site=26&owa_no_fiche=23&owa_apercu=N&owa_imprimable=N&owa_bottin=
