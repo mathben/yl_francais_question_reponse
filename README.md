@@ -10,6 +10,7 @@ Supporte Python3, non compatible avec Python2.
 Dépendance, installez :
 
 - colorama https://pypi.org/project/colorama/
+- pdfminer https://pypi.org/project/pdfminer/
 
 ou
 
@@ -42,3 +43,9 @@ Pour plus d'aide :
 
 Faites `Ctrl-c` pour mettre fin au questionnaire, votre résultat vous sera transmis ainsi que la prochaine question pour
 recontinuer.
+
+## Test logiciel
+
+Générer la base de données à partir du PDF :
+
+`python3 questionnaire.py --test`
