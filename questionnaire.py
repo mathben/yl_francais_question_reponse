@@ -224,7 +224,7 @@ class QuestionParser:
                                 work.add_number(first_int)
                                 work.add_question(text)
                             else:
-                                work.add_sub_question(text)
+                                work.add_sub_question()
                     elif not work.number_is_int():
                         continue
                     elif text.startswith("a)"):
@@ -331,7 +331,7 @@ class Working:
         # 0 not start
         # 1 is question
         # 2 is choix
-        self._state = 0
+        # self._state = 0
 
         self._number = None
         self.lst_result = []
@@ -344,15 +344,18 @@ class Working:
         #     "lst_choix": [],
         #     "explication": "",
         # }
-        self._question = ""
+        self._question = []
 
     def is_new_question(self):
         if self._question:
+            if self.lst_choix:
+                self.add_sub_question()
             dct_result = {
-                "question": self._question,
+                "question": self._question[0],
                 "sub_question": self.lst_sub_question[:],
             }
             self.lst_sub_question = []
+            self._question = []
             self.lst_result.append(dct_result)
             # self.dct_result = {}
 
@@ -360,15 +363,15 @@ class Working:
         return isinstance(self._number, int)
 
     def add_number(self, the_number):
-        if self._state == 0:
-            self.is_new_question()
-            self._state = 1
+        # if self._state == 0:
+        self.is_new_question()
+            # self._state = 1
         self._number = the_number
 
     def add_question(self, text):
-        self._question = text
+        self._question.append(text)
 
-    def add_sub_question(self, text):
+    def add_sub_question(self):
         if self.lst_choix:
             self.lst_sub_question.append(self.lst_choix)
         self.lst_choix = []
@@ -381,9 +384,11 @@ class Working:
         text = text.strip()
         if not text:
             return
-        if self._state == 1:
-            self._question += f"\n{text}"
-
+        # if self._state == 1:
+        if self._question:
+            self._question[-1] += f"\n{text}"
+        else:
+            print("ERREUR MANQUE DE QUESTION LORS DE L'AJOUT DU TEXTE, HELP ME!")
     #
     # def add_field(self, line):
     #     status = self.check_data()
