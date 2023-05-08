@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 # License GPL-3.0 or later (http://www.gnu.org/licenses/gpl).
 import argparse
 import logging
@@ -40,6 +39,16 @@ lst_menu_line = []
 
 EXPECTED_HEADERS_CSV = "Question,Réponse,Choix A,Choix B,Choix C,Choix D,Explication"
 CSV_COLON_LENGTH = 7
+
+LST_IGNORE_TEXT = [
+    "La ponctuation",
+    "Encerclez la lettre correspondant à la phrase qui comporte une erreur de ponctuation.",
+    "Les marqueurs de relations",
+    "Encerclez la lettre correspondant à la phrase dans laquelle un marqueur de relation",
+    "n’est pas bien employé.",
+    "PARTIE A",
+    "PARTIE B",
+]
 
 
 def main():
@@ -196,12 +205,13 @@ class QuestionParser:
         return device, interpreter
 
     def parse_obj(self, objs, work, first_page=False):
-        key_section = ["PARTIE A", "PARTIE B"]
+        # key_section = ["PARTIE A", "PARTIE B"]
         # Strategie : détecter un chiffre suivi d'un point, c'est une question.
         # Les key_section à ignorer, n'impacte pas les données
         # Détecter les bonnes réponses, on cherche "Corrigé"
         # Une page qui contient "avec corrigés à la suite" sont les débuts des choix de réponses
         # 'VOIR CORRIGÉ PAGES SUIVANTES' signifie une fin de réponses
+        has_run = False
         for obj in objs:
             if isinstance(obj, pdfminer.layout.LTTextBox):
                 for o in obj._objs:
@@ -215,12 +225,16 @@ class QuestionParser:
 
                     text = unicodedata.normalize("NFKC", origin_text).replace(u'\xad', u'-').strip()
 
+                    if text.strip() in LST_IGNORE_TEXT:
+                        continue
+
                     lst_int = [int(s) for s in text.split(".") if s.isdigit()]
                     if lst_int:
                         first_int = lst_int[0]
                         str_key = f"{first_int}."
                         if len(lst_int) == 1 and text.startswith(str_key):
                             if text[len(str_key):].strip():
+                                has_run = True
                                 work.add_number(first_int)
                                 work.add_question(text)
                             else:
@@ -237,46 +251,45 @@ class QuestionParser:
                         work.add_choix(text[3:])
                     else:
                         work.append_text(text)
-
                     # if not text:
                     #     work.add_data("")
-                    last_fontname = ""
-                    continue
-                    for c in o._objs:
-                        if (
-                                isinstance(c, pdfminer.layout.LTChar)
-                                # and c.fontname != last_fontname
-                        ):
-                            lst_int = [int(s) for s in text.split() if s.isdigit()]
-                            if lst_int:
-                                first_int = lst_int[0]
-                                if len(lst_int) == 1 and text.startswith(f"{first_int}."):
-                                    work.add_number(first_int)
-                            if not work.number_is_int():
-                                continue
-
-                            last_fontname = c.fontname
-                            tpl_info = (c.fontname, round(c.size, 2))
-                            if tpl_info in LST_MODEL_FONT:
-                                text_type = "MODEL"
-                                work.add_model(text)
-                            elif tpl_info in LST_FIELD_FONT:
-                                text_type = "FIELD"
-                                work.add_field(text)
-                            elif tpl_info in LST_HELP_FONT:
-                                text_type = "HELP"
-                                work.add_help(text)
-                            elif tpl_info in LST_DATA_FONT:
-                                text_type = "DATA"
-                                work.add_data(text)
-                            else:
-                                text_type = "UNKNOWN"
-                                logger.warning("Cannot find this type of text.")
-                            if DEBUG_LOGGER:
-                                logger.info(
-                                    f"type '{text_type}' text '{text}' fontname"
-                                    f" '{c.fontname}' size '{round(c.size, 2)}'"
-                                )
+                    # last_fontname = ""
+                    # continue
+                    # for c in o._objs:
+                    #     if (
+                    #             isinstance(c, pdfminer.layout.LTChar)
+                    #             # and c.fontname != last_fontname
+                    #     ):
+                    #         lst_int = [int(s) for s in text.split() if s.isdigit()]
+                    #         if lst_int:
+                    #             first_int = lst_int[0]
+                    #             if len(lst_int) == 1 and text.startswith(f"{first_int}."):
+                    #                 work.add_number(first_int)
+                    #         if not work.number_is_int():
+                    #             continue
+                    #
+                    #         last_fontname = c.fontname
+                    #         tpl_info = (c.fontname, round(c.size, 2))
+                    #         if tpl_info in LST_MODEL_FONT:
+                    #             text_type = "MODEL"
+                    #             work.add_model(text)
+                    #         elif tpl_info in LST_FIELD_FONT:
+                    #             text_type = "FIELD"
+                    #             work.add_field(text)
+                    #         elif tpl_info in LST_HELP_FONT:
+                    #             text_type = "HELP"
+                    #             work.add_help(text)
+                    #         elif tpl_info in LST_DATA_FONT:
+                    #             text_type = "DATA"
+                    #             work.add_data(text)
+                    #         else:
+                    #             text_type = "UNKNOWN"
+                    #             logger.warning("Cannot find this type of text.")
+                    #         if DEBUG_LOGGER:
+                    #             logger.info(
+                    #                 f"type '{text_type}' text '{text}' fontname"
+                    #                 f" '{c.fontname}' size '{round(c.size, 2)}'"
+                    #             )
             # if it's a container, recurse
             elif isinstance(obj, pdfminer.layout.LTFigure):
                 self.parse_obj(obj._objs, work)
@@ -309,9 +322,11 @@ class QuestionParser:
             csv_writer.writerow(EXPECTED_HEADERS_CSV.split(","))
             for dct_result in lst_result:
                 question = dct_result.get("question")
-                for sub_dct_result in dct_result.get("sub_question"):
+                for index, sub_dct_result in enumerate(dct_result.get("sub_question")):
+                    str_question = question if type(question) is str else question[index]
                     csv_writer.writerow(
-                        [question, "", sub_dct_result[0], sub_dct_result[1], sub_dct_result[2], sub_dct_result[3], ""])
+                        [str_question, "", sub_dct_result[0], sub_dct_result[1], sub_dct_result[2], sub_dct_result[3],
+                         ""])
 
 
 class Working:
@@ -345,16 +360,25 @@ class Working:
         #     "explication": "",
         # }
         self._question = []
+        self._specific_question = []
+        self.enable_sub_question = False
 
     def is_new_question(self):
         if self._question:
             if self.lst_choix:
                 self.add_sub_question()
+
+            if self._specific_question:
+                lst_question = [self._question[0] + "\n" + a for a in self._specific_question]
+            else:
+                lst_question = self._question[0]
+
             dct_result = {
-                "question": self._question[0],
+                "question": lst_question,
                 "sub_question": self.lst_sub_question[:],
             }
             self.lst_sub_question = []
+            self.enable_sub_question = False
             self._question = []
             self.lst_result.append(dct_result)
             # self.dct_result = {}
@@ -365,7 +389,7 @@ class Working:
     def add_number(self, the_number):
         # if self._state == 0:
         self.is_new_question()
-            # self._state = 1
+        # self._state = 1
         self._number = the_number
 
     def add_question(self, text):
@@ -374,6 +398,8 @@ class Working:
     def add_sub_question(self):
         if self.lst_choix:
             self.lst_sub_question.append(self.lst_choix)
+        else:
+            self.enable_sub_question = True
         self.lst_choix = []
 
     def add_choix(self, text):
@@ -385,10 +411,16 @@ class Working:
         if not text:
             return
         # if self._state == 1:
-        if self._question:
+        if self.lst_choix:
+            # TODO à vérifier selon les réponses, mais enlever le \n
+            self.lst_choix[-1] += f"\n{text}"
+        elif self.enable_sub_question:
+            self._specific_question.append(text)
+        elif self._question:
             self._question[-1] += f"\n{text}"
         else:
             print("ERREUR MANQUE DE QUESTION LORS DE L'AJOUT DU TEXTE, HELP ME!")
+
     #
     # def add_field(self, line):
     #     status = self.check_data()
