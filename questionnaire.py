@@ -64,6 +64,8 @@ def main():
                         default="X")
     parser.add_argument("--test", action="store_true",
                         help="Génère la base de données à partir du fichier test.PDF.")
+    parser.add_argument("--exit_after_x_question", type=int,
+                        help="Mettre un chiffre pour tenter de détecter la question à quitter l'extraction.")
     # parser.add_argument("-v", "--verbose", action="store_true",
     #                     help="verbose output")
     parser.add_argument("--debug", action="store_true",
@@ -231,6 +233,9 @@ class QuestionParser:
                     lst_int = [int(s) for s in text.split(".") if s.isdigit()]
                     if lst_int:
                         first_int = lst_int[0]
+                        if self.parser.exit_after_x_question and self.parser.exit_after_x_question <= first_int:
+                            # TODO force ajout des questions précédentes
+                            return
                         str_key = f"{first_int}."
                         if len(lst_int) == 1 and text.startswith(str_key):
                             if text[len(str_key):].strip():
