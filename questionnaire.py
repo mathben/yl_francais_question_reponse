@@ -127,7 +127,8 @@ class QuestionParser:
                     # Sometimes, the file is encoded with utf-8-sig, and we support utf-8
                     headers = ",".join(row).replace('\ufeff', '')
                     if headers != EXPECTED_HEADERS_CSV:
-                        raise Exception(f"Wrong headers in your csv file. Need '{EXPECTED_HEADERS_CSV}'")
+                        raise Exception(
+                            f"Wrong headers in your csv file. Need '{EXPECTED_HEADERS_CSV}', and got '{headers}'")
                 else:
                     line_count += 1
                     if self.parser.question >= line_count:
@@ -136,7 +137,7 @@ class QuestionParser:
 
                     if len(row) != CSV_COLON_LENGTH:
                         raise Exception(
-                            f"La question {self._question_number} ne contient pas {CSV_COLON_LENGTH} colonnes, fichier csv mal formaté.")
+                            f"La question {self._question_number} ne contient pas {CSV_COLON_LENGTH} colonnes, fichier csv mal formaté, il contient plutôt {len(row)}.")
                     print(f'{Fore.GREEN}Question {self._question_number}{Style.RESET_ALL}')
                     print(row[0].replace("\\n", "\n"))
                     print()
