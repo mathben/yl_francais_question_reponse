@@ -124,7 +124,8 @@ class QuestionParser:
             for row in csv_reader:
                 if line_count == 0:
                     line_count += 1
-                    headers = ",".join(row)
+                    # Sometimes, the file is encoded with utf-8-sig, and we support utf-8
+                    headers = ",".join(row).replace('\ufeff', '')
                     if headers != EXPECTED_HEADERS_CSV:
                         raise Exception(f"Wrong headers in your csv file. Need '{EXPECTED_HEADERS_CSV}'")
                 else:
